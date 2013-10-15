@@ -1,0 +1,18 @@
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\obj\x86\Debug\HKHR_ATP2.csprojResolveAssemblyReference.cache
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\obj\x86\Debug\HKHR_ATP2.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\obj\x86\Debug\HKHR_ATP2.pdb
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\HKHR_ATP2.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\HKHR_ATP2.pdb
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\OpenBveApi.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\OpenBveApi.xml
+F:\HKHR-ATP2\HKHR_ATP2\bin\Debug\HKHR_ATP2.dll
+F:\HKHR-ATP2\HKHR_ATP2\bin\Debug\HKHR_ATP2.pdb
+F:\HKHR-ATP2\HKHR_ATP2\bin\Debug\OpenBveApi.xml
+F:\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.csprojResolveAssemblyReference.cache
+F:\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.dll
+F:\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.pdb
+F:\bve4\Train\HR300R\trainsys\HKHR_ATP2.dll
+F:\bve4\Train\HR300R\trainsys\HKHR_ATP2.pdb
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.csprojResolveAssemblyReference.cache
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.pdb

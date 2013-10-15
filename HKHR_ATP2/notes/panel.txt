@@ -1,0 +1,14 @@
+﻿128		No signal
+129		HKHR-ATP
+130		Restricted Manual Reverse
+131		Restricted Manual 
+132		ATP
+133		ATO
+
+Distance to Next Station (if docking, refresh when complete docking)
+(0-9 = 0-9 | 10 = "." | 11 = " " | 12 = "-")
+140		thousands digit / 1st char
+141		hundreds digit / 2nd char
+142		tens digit / 3rd char
+143		single digit / 4th char
+144		unit (0 = m, 1 = km)

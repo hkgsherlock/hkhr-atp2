@@ -1,0 +1,7 @@
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\obj\x86\Debug\Plugin.csprojResolveAssemblyReference.cache
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\HKHR_ATP2.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\HKHR_ATP2.pdb
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\OpenBveApi.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\bin\Debug\OpenBveApi.xml
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\obj\x86\Debug\HKHR_ATP2.dll
+C:\Users\Charlie Poon\Desktop\HKHR-ATP2\Plugin\obj\x86\Debug\HKHR_ATP2.pdb

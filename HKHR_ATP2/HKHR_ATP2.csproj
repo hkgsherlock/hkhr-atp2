@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{D49DB8CF-5EB9-4AEA-A749-F379E8D34768}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>HKHR_ATP2</RootNamespace>
+    <AssemblyName>HKHR_ATP2</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SourceAnalysisOverrideSettingsFile>C:\Documents and Settings\Administrator\Application Data\ICSharpCode/SharpDevelop3.0\Settings.SourceAnalysis</SourceAnalysisOverrideSettingsFile>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <NoStdLib>False</NoStdLib>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <OutputPath>F:\bve4\Train\HR300R\trainsys\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RegisterForComInterop>False</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <BaseAddress>4194304</BaseAddress>
+    <FileAlignment>4096</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <Optimize>False</Optimize>
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <ItemGroup>
+    <Reference Include="OpenBveApi">
+      <HintPath>F:\openBVE\openBVE\OpenBveApi.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AccelerationPhysics.cs" />
+    <Compile Include="ATO.cs">
+      <DependentUpon>ModeSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ATP2.cs">
+      <DependentUpon>ModeSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ATP2_settings.cs">
+      <DependentUpon>ATP2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DllLoader.cs" />
+    <Compile Include="Driverless.cs">
+      <DependentUpon>ModeSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IDs_definitions\BeaconID.cs" />
+    <Compile Include="IDs_definitions\PanelID.cs" />
+    <Compile Include="ModeSelector.cs" />
+    <Compile Include="Plugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RM.cs">
+      <DependentUpon>ModeSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SoundManager.cs">
+      <DependentUpon>Plugin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="StationsMemory.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="IDs_definitions\beacons.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="IDs_definitions" />
+  </ItemGroup>
+</Project>
