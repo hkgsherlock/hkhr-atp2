@@ -54,6 +54,7 @@
     <Compile Include="ATO.cs">
       <DependentUpon>ModeSelector.cs</DependentUpon>
     </Compile>
+    <Compile Include="ATO_settings.cs" />
     <Compile Include="ATP2.cs">
       <DependentUpon>ModeSelector.cs</DependentUpon>
     </Compile>
@@ -66,6 +67,7 @@
     </Compile>
     <Compile Include="IDs_definitions\BeaconID.cs" />
     <Compile Include="IDs_definitions\PanelID.cs" />
+    <Compile Include="IDs_definitions\SoundID.cs" />
     <Compile Include="ModeSelector.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,6 +76,9 @@
     </Compile>
     <Compile Include="SoundManager.cs">
       <DependentUpon>Plugin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Stamem_set.cs">
+      <DependentUpon>StationsMemory.cs</DependentUpon>
     </Compile>
     <Compile Include="StationsMemory.cs" />
   </ItemGroup>

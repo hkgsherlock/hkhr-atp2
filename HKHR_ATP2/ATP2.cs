@@ -146,6 +146,14 @@ namespace HKHR_ATP2
 			/// </summary>
 			internal double? CurrentPermittedSpeed = null;
 			/// <summary>
+			/// Represents the current permitted speed determined by the ATP system.
+			/// </summary>
+			internal double? CurrentEmergencyBrakeSpeed = null;
+			/// <summary>
+			/// Represents the current permitted speed determined by the ATP system.
+			/// </summary>
+			internal double? CurrentTargetSpeed = null;
+			/// <summary>
 			/// Gets the speed flag in which train is using currently.
 			/// </summary>
 			internal SpeedFlag CurrentSpeedFlag;
@@ -166,7 +174,13 @@ namespace HKHR_ATP2
 		bool ATPFail;
 		int cSpeedFlagIndexFront = -1;
 		int cSpeedFlagIndexRear = -1;
+		int lFrameCSpeedFlagIndexWholeTrain = -2;
 		int cSpeedFlagIndexWholeTrain = -1;
+		
+		double PermittedSpeed = 0.0;
+		double EmergencyBrakeSpeed = 0.0;
+		double _prevTS = 0.0;
+		double TargetSpeed = 0.0;
 		
 		internal ATP2()
 		{
@@ -226,9 +240,6 @@ namespace HKHR_ATP2
 		{
 			ATPElapseData atpElapseData = new ATPElapseData();
 			
-			double PermittedSpeed = 0.0;
-			double EmergencyBrakeSpeed = 0.0;
-			
 			#region calculation part
 			if (OnCabSignallingSection) {
 				// yes we have singal now
@@ -240,6 +251,7 @@ namespace HKHR_ATP2
 				// if so, continue to use the lower one until the whole train is in higher one
 				cSpeedFlagIndexFront = SpeedFlags.VlookupCurrentIndex(vState.Vehicle.Location);
 				cSpeedFlagIndexRear = SpeedFlags.VlookupCurrentIndex(vState.Vehicle.Location - vSpec.Cars * LengthPerCar);
+				lFrameCSpeedFlagIndexWholeTrain = cSpeedFlagIndexWholeTrain;
 				cSpeedFlagIndexWholeTrain = SpeedFlags[cSpeedFlagIndexRear].Speed < SpeedFlags[cSpeedFlagIndexFront].Speed ? cSpeedFlagIndexRear : cSpeedFlagIndexFront;
 				
 				PermittedSpeed = SpeedFlags[cSpeedFlagIndexWholeTrain].Speed;
@@ -251,10 +263,9 @@ namespace HKHR_ATP2
 				
 				// check next speed flag
 				// TODO:
-				Panel[PanelID.PermittedSpeed.NextFlagSpeed.IsShowing] = 0;
-				Panel[PanelID.PermittedSpeed.NextFlagSpeed.Speedometer] = (int)PermittedSpeed;
-				if (cSpeedFlagIndexWholeTrain > -1 && cSpeedFlagIndexWholeTrain + 1 < SpeedFlags.Count) {
+				TargetSpeed = PermittedSpeed;
 				//if next flag exists
+				if (cSpeedFlagIndexWholeTrain > -1 && cSpeedFlagIndexWholeTrain + 1 < SpeedFlags.Count) {
 					SpeedFlag nextFlag = atpElapseData.NextSpeedFlag = SpeedFlags[cSpeedFlagIndexWholeTrain + 1];
 					// if speed of next speed flag is lower than current one, 
 					// and about to approrach, start to decelerate
@@ -266,8 +277,7 @@ namespace HKHR_ATP2
 						                                        BrakeRate[DefaultNormalBrakeNotch])
 						   ) {
 							#region show next flag speed to left side LCD display
-							Panel[PanelID.PermittedSpeed.NextFlagSpeed.IsShowing] = 1;
-							Panel[PanelID.PermittedSpeed.NextFlagSpeed.Speedometer] = nextFlag.Speed;
+							TargetSpeed = nextFlag.Speed;
 							// TODO: 100, 10, 1 next flag speed
 							#endregion
 							PermittedSpeed = AccelerationPhysics.GetInitialSpeed(
@@ -275,19 +285,12 @@ namespace HKHR_ATP2
 								BrakeRate[DefaultNormalBrakeNotch],
 								nextFlag.Speed > 0 ? nextFlag.StartingLocation - vState.Vehicle.Location : nextFlag.StartingLocation - vState.Vehicle.Location - 10
 							);
-							EmergencyBrakeSpeed = AccelerationPhysics.GetInitialSpeed(
-								nextFlag.Speed > 0 ? nextFlag.Speed + 5 : 0,
-								BrakeRate[DefaultNormalBrakeNotch],
-								nextFlag.Speed > 0 ? nextFlag.StartingLocation - vState.Vehicle.Location + 5 : nextFlag.StartingLocation - vState.Vehicle.Location - 5
-							);
+							EmergencyBrakeSpeed = PermittedSpeed + 5;
 						}
 					}
 				} else {
 					atpElapseData.NextSpeedFlag = null;
 				}
-				
-				atpElapseData.CurrentPermittedSpeed = PermittedSpeed;
-				atpElapseData.CurrentSpeedFlag = SpeedFlags[cSpeedFlagIndexWholeTrain];
 				// === END of speed flag check on a frame ===
 				#endregion
 				#region limit speed when arriving station
@@ -298,19 +301,19 @@ namespace HKHR_ATP2
 						// arriving at platform
 						// overrun (+5m)
 						if (vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition + 5) {
+							TargetSpeed = 0;
 							PermittedSpeed = 0;
 							EmergencyBrakeSpeed = 0;
+						// overrun but in limit
 						} else if (vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition && vState.Vehicle.Location <= Stations[lastCompletedDockingIndex + 1].StopPosition + 5) {
+							TargetSpeed = 0;
 							PermittedSpeed = 0;
 							EmergencyBrakeSpeed = Stations[lastCompletedDockingIndex + 1].StopPosition + 5 - vState.Vehicle.Location;
+						// correct or underrun
 						} else if (Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location <=
 						    AccelerationPhysics.GetDisplacement(PermittedSpeed, 0, BrakeRate[DefaultNormalBrakeNotch])
 						   ) {
-							#region show next flag speed to left side LCD display
-							Panel[PanelID.PermittedSpeed.NextFlagSpeed.IsShowing] = 1;
-							Panel[PanelID.PermittedSpeed.NextFlagSpeed.Speedometer] = 0;
-							// TODO: 100, 10, 1 next flag speed
-							#endregion
+							TargetSpeed = 0;
 							PermittedSpeed = AccelerationPhysics.GetInitialSpeed(0, BrakeRate[DefaultNormalBrakeNotch], Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location);
 							EmergencyBrakeSpeed = PermittedSpeed + 5;
 						}
@@ -332,12 +335,35 @@ namespace HKHR_ATP2
 			
 			#region behaviours part
 			#region output to left side LCD display
-			Panel[PanelID.PermittedSpeed.Speedometer] = (int)PermittedSpeed;
+			// Permitted Speed
 			// TODO: 100, 10, 1 pspeed
+			Panel[PanelID.PermittedSpeed.Speedometer] = (int)PermittedSpeed;
 			Panel[PanelID.PermittedSpeed.SpeedometerTimes100] = (int)(PermittedSpeed * 100);
-			Panel[PanelID.PermittedSpeed.EmgSpeed.Speedometer] = (int)EmergencyBrakeSpeed;
+			
+			// Emergency Brake Speed
 			// TODO: 100, 10, 1 ebspeed
+			Panel[PanelID.PermittedSpeed.EmgSpeed.Speedometer] = (int)EmergencyBrakeSpeed;
 			Panel[PanelID.PermittedSpeed.EmgSpeed.SpeedometerTimes100] = (int)(EmergencyBrakeSpeed * 100);
+			
+			// Target Speed
+			if (TargetSpeed == PermittedSpeed) {
+				Panel[PanelID.PermittedSpeed.TargetSpeed.IsShowing] = 0;
+				Panel[PanelID.PermittedSpeed.TargetSpeed.Speedometer] = (int)PermittedSpeed;
+			} else {
+				Panel[PanelID.PermittedSpeed.TargetSpeed.IsShowing] = 1;
+				Panel[PanelID.PermittedSpeed.TargetSpeed.Speedometer] = (int)TargetSpeed;
+			}
+			#endregion
+			
+			#region control sounds playing
+			if (TargetSpeed != _prevTS) {
+				_prevTS = TargetSpeed;
+				SoundManager.PlayOnce(SoundID.ATPNewSpeed);
+			}
+			
+			if (cSpeedFlagIndexWholeTrain != lFrameCSpeedFlagIndexWholeTrain) {
+				SoundManager.PlayOnce(SoundID.ATPNewSpeed);
+			}
 			#endregion
 			
 			string permittedSpeedString = ((int)PermittedSpeed).ToString();
@@ -370,6 +396,10 @@ namespace HKHR_ATP2
 			
 			// return ok?(CabSignalling)
 			atpElapseData.OnCabSignallingSection = OnCabSignallingSection;
+			atpElapseData.CurrentPermittedSpeed = PermittedSpeed;
+			atpElapseData.CurrentEmergencyBrakeSpeed = EmergencyBrakeSpeed;
+			atpElapseData.CurrentTargetSpeed = TargetSpeed;
+			atpElapseData.CurrentSpeedFlag = SpeedFlags[cSpeedFlagIndexWholeTrain];
 			// No Signal? OR HKHR-ATP2 OK?
 			if (OnCabSignallingSection) {
 				Panel[PanelID.StatusLEDs.HKHR_ATP] = 1;
@@ -384,14 +414,14 @@ namespace HKHR_ATP2
 			return atpElapseData;
 		}
 		
-		public void NotElapsing()
+		internal void NotElapsing()
 		{
-			for (int i = PanelID.PermittedSpeed.Speedometer; i < PanelID.PermittedSpeed.NextFlagSpeed.SingleDigit; i++) {
+			for (int i = PanelID.PermittedSpeed.Speedometer; i < PanelID.PermittedSpeed.TargetSpeed.SingleDigit; i++) {
 				Panel[i] = 0;
 			}
 		}
 		
-		public void DoorChange(DoorStates oldState, DoorStates newState) {
+		internal void DoorChange(DoorStates oldState, DoorStates newState) {
 			if (newState == DoorStates.None) {
 				doorCls = true;
 			} else {
@@ -407,7 +437,7 @@ namespace HKHR_ATP2
 			handleBrake = brakeNotch;
 		}
 		
-		public void SetBeacon(BeaconData beacon)
+		internal void SetBeacon(BeaconData beacon)
 		{
 			switch (beacon.Type) {
 				case BeaconID.HKHRATP2.EnDisableCabSignal:
@@ -425,7 +455,7 @@ namespace HKHR_ATP2
 			
 		}
 		
-		public void SetSignal(SignalData[] signal) {
+		internal void SetSignal(SignalData[] signal) {
 			// TODO: ATP2 set signal
 		}
 	}

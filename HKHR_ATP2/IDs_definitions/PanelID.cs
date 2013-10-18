@@ -59,7 +59,7 @@
 				public const int SpeedometerTimes100 = 159;
 			}
 			
-			public static class NextFlagSpeed
+			public static class TargetSpeed
 			{
 				public const int IsShowing = 160;
 				public const int Speedometer = 161;

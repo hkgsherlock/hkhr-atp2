@@ -48,6 +48,7 @@ namespace HKHR_ATP2
 			stationsMemory.OnLastDockIndexRefreshed += new StationsMemory.LastDockIndexReceiver(atp2.WriteRefreshedLastDockedIndex);
 			
 			ato = new ATO();
+			ato.Load(properties);
 //			driverless.OnDriverlessAvailableElapse += new CallDriverlessAvailableEventHandlers();
 		}
 		
@@ -56,6 +57,7 @@ namespace HKHR_ATP2
 			
 			rm.SetVehicleSpecs(specs);
 			atp2.SetVehicleSpecs(specs);
+			ato.SetVehicleSpecs(specs);
 		}
 		
 		internal void Initialize(InitializationModes mode) {
@@ -139,18 +141,21 @@ namespace HKHR_ATP2
 			handlePower = powerNotch;
 			rm.SetPower(powerNotch);
 			atp2.SetPower(powerNotch);
+			ato.SetPower(powerNotch);
 		}
 		
 		internal void SetBrake(int brakeNotch) {
 			handleBrake = brakeNotch;
 			rm.SetBrake(brakeNotch);
 			atp2.SetBrake(brakeNotch);
+			ato.SetBrake(brakeNotch);
 		}
 		
-		public void DoorChange(DoorStates oldState, DoorStates newState) {
+		internal void DoorChange(DoorStates oldState, DoorStates newState) {
 			stationsMemory.DoorChange(oldState, newState);
 			driverless.DoorChange(oldState, newState);
 			atp2.DoorChange(oldState, newState);
+			ato.DoorChange(oldState, newState);
 		}
 		
 		internal void KeyDown(VirtualKeys key) {
@@ -168,6 +173,8 @@ namespace HKHR_ATP2
 					// sound
 				}
 			}
+			
+			ato.KeyDown(key);
 		}
 		
 		public void SetSignal(SignalData[] signal) {

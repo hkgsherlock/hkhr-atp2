@@ -47,13 +47,6 @@ namespace HKHR_ATP2 {
 		/// <summary>Is called every frame.</summary>
 		/// <param name="data">The data passed to the plugin.</param>
 		public void Elapse(ElapseData data) {
-			/*
-			 * How to access panel variables:
-			 * Panel[i] = 1;
-			 * 
-			 * How to access sound variables:
-			 * Sound[i] = SoundInstructions.PlayOnce;
-			 * */
 			ms.Elapse(data);
 			
 			Panel[PanelID.ActualHandle.Reverser] = data.Handles.Reverser;

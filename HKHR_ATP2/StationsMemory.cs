@@ -7,7 +7,7 @@ namespace HKHR_ATP2
 	/// <summary>
 	/// Description of StationsMemory.
 	/// </summary>
-	internal class StationsMemory
+	internal partial class StationsMemory
 	{
 		private int[] Panel;
 		
@@ -135,23 +135,27 @@ namespace HKHR_ATP2
 		public void Elapse(ElapseData data) {
 			vState = data;
 			
+			// if stop mem has data
 			if (Stations.Count > 0) {
-				if (lastCompletedDockingIndex + 1 < Stations.Count) { // if next stop is in range 
-					
+				// if next stop is in range
+				if (lastCompletedDockingIndex + 1 < Stations.Count) { 
+					// if next stop is passing stop
 					if (Stations[lastCompletedDockingIndex + 1].DoorOpen == -2 
-					    && vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition - 0.3)
-					{ // if next stop is passing stop
+					    && vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition)
+					{
 						lastCompletedDockingIndex++;
-					} else if (vState.Vehicle.Speed.KilometersPerHour == 0				           
+					}
+					// if next stop is a stop which does not need to open doors
+					else if (vState.Vehicle.Speed.KilometersPerHour == 0
 						    && Stations[lastCompletedDockingIndex + 1].DoorOpen == 0 
-						    && vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition - 10
-						    && vState.Vehicle.Location <= Stations[lastCompletedDockingIndex + 1].StopPosition + 10)
-					{ // if next stop is a stop which does not need to open doors
+						    && vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition - StopAndDepartStopsErrorRange
+						    && vState.Vehicle.Location <= Stations[lastCompletedDockingIndex + 1].StopPosition + StopAndDepartStopsErrorRange)
+					{
 						lastCompletedDockingIndex++;
 					}
 					
 					// passed a station/stop which should stop
-					if (vState.Vehicle.Location > Stations[lastCompletedDockingIndex + 1].StopPosition + 45 ) {
+					if (vState.Vehicle.Location > Stations[lastCompletedDockingIndex + 1].StopPosition + IllegalPassStopForceJumpRange) {
 	//					System.Windows.Forms.MessageBox.Show("passed a stop");
 						lastCompletedDockingIndex++;
 					}
@@ -206,8 +210,8 @@ namespace HKHR_ATP2
 				if (/*oldState != DoorStates.None && */newState == DoorStates.None 
 				    && vState.Vehicle.Speed.KilometersPerHour == 0 
 				    && (Stations[lastCompletedDockingIndex + 1].DoorOpen == -1 || Stations[lastCompletedDockingIndex + 1].DoorOpen >= 1)
-				    && vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition - 0.3
-				    && vState.Vehicle.Location <= Stations[lastCompletedDockingIndex + 1].StopPosition + 0.3
+				    && vState.Vehicle.Location >= Stations[lastCompletedDockingIndex + 1].StopPosition - OpenDoorStopsErrorRange
+				    && vState.Vehicle.Location <= Stations[lastCompletedDockingIndex + 1].StopPosition + OpenDoorStopsErrorRange
 				    && lastCompletedDockingIndex < Stations.Count)
 				{
 					lastCompletedDockingIndex++;

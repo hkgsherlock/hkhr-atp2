@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-# SharpDevelop 4.2.2.8818
+# SharpDevelop 4.3
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKHR_ATP2", "HKHR_ATP2\HKHR_ATP2.csproj", "{D49DB8CF-5EB9-4AEA-A749-F379E8D34768}"
 EndProject
 Global
