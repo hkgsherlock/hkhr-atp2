@@ -144,15 +144,15 @@ namespace HKHR_ATP2
 			/// <summary>
 			/// Represents the current permitted speed determined by the ATP system.
 			/// </summary>
-			internal double? CurrentPermittedSpeed = null;
+			internal double CurrentPermittedSpeed;
 			/// <summary>
-			/// Represents the current permitted speed determined by the ATP system.
+			/// Represents the current emergency speed determined by the ATP system.
 			/// </summary>
-			internal double? CurrentEmergencyBrakeSpeed = null;
+			internal double CurrentEmergencyBrakeSpeed;
 			/// <summary>
-			/// Represents the current permitted speed determined by the ATP system.
+			/// Represents the current target speed determined by the ATP system.
 			/// </summary>
-			internal double? CurrentTargetSpeed = null;
+			internal double CurrentTargetSpeed;
 			/// <summary>
 			/// Gets the speed flag in which train is using currently.
 			/// </summary>
@@ -161,6 +161,14 @@ namespace HKHR_ATP2
 			/// Gets the next speed flag in which train will use.
 			/// </summary>
 			internal SpeedFlag NextSpeedFlag;
+			/// <summary>
+			/// Represents if ATP is applying brake. 
+			/// </summary>
+			internal bool ATPBrakeApplying = false;
+			/// <summary>
+			/// Represents if ATP failed (mostly caused by overspeeding).
+			/// </summary>
+			internal bool ATPFail = false;
 			/// <summary>
 			/// Represents the retrieved data given to the plugin in the Elapse call.
 			/// </summary>
@@ -193,7 +201,7 @@ namespace HKHR_ATP2
 			
 			string[] trainDat = System.IO.File.ReadAllLines(System.IO.Path.Combine(properties.TrainFolder, "train.dat"));
 			
-			// re-write trainDatParser
+			// TODO: re-write trainDatParser
 			
 			bool inPerformanceTag = false;
 			bool inDelayTag = false;
@@ -369,12 +377,14 @@ namespace HKHR_ATP2
 			string permittedSpeedString = ((int)PermittedSpeed).ToString();
 			if (doorCls) { // Door is closed
 				if (ATPFail) {
+					vState.DebugMessage = "!ATP2 FAIL!";
 					if (vState.Vehicle.Speed.KilometersPerHour == 0) {
 						ATPFail = false;
 					} else {
 						// emg beep beep beep
 						vState.Handles.PowerNotch = 0;
 						vState.Handles.BrakeNotch = vSpec.BrakeNotches + 1;
+						atpElapseData.ATPBrakeApplying = true;
 					}
 				} else {
 					if (vState.Vehicle.Speed.KilometersPerHour > EmergencyBrakeSpeed) {
@@ -400,6 +410,7 @@ namespace HKHR_ATP2
 			atpElapseData.CurrentEmergencyBrakeSpeed = EmergencyBrakeSpeed;
 			atpElapseData.CurrentTargetSpeed = TargetSpeed;
 			atpElapseData.CurrentSpeedFlag = SpeedFlags[cSpeedFlagIndexWholeTrain];
+			atpElapseData.ATPFail = ATPFail;
 			// No Signal? OR HKHR-ATP2 OK?
 			if (OnCabSignallingSection) {
 				Panel[PanelID.StatusLEDs.HKHR_ATP] = 1;

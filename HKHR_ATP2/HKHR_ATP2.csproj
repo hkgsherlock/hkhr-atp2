@@ -44,9 +44,6 @@
       <HintPath>F:\openBVE\openBVE\OpenBveApi.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
@@ -54,7 +51,9 @@
     <Compile Include="ATO.cs">
       <DependentUpon>ModeSelector.cs</DependentUpon>
     </Compile>
-    <Compile Include="ATO_settings.cs" />
+    <Compile Include="ATO_settings.cs">
+      <DependentUpon>ATO.cs</DependentUpon>
+    </Compile>
     <Compile Include="ATP2.cs">
       <DependentUpon>ModeSelector.cs</DependentUpon>
     </Compile>

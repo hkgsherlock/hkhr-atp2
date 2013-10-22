@@ -49,6 +49,8 @@ namespace HKHR_ATP2
 			
 			ato = new ATO();
 			ato.Load(properties);
+			stationsMemory.OnStationDataRefreshed += new StationsMemory.NewStationDataReceiver(ato.WriteRefreshedStationsCollection);
+			stationsMemory.OnLastDockIndexRefreshed += new StationsMemory.LastDockIndexReceiver(ato.WriteRefreshedLastDockedIndex);
 //			driverless.OnDriverlessAvailableElapse += new CallDriverlessAvailableEventHandlers();
 		}
 		
@@ -131,7 +133,7 @@ namespace HKHR_ATP2
 					break;
 				case ModeSelector.Modes.AM:
 					vState.Handles.Reverser = 1;
-					Panel[PanelID.StatusLEDs.ATO] = 0;
+					Panel[PanelID.StatusLEDs.ATO] = 1;
 					ato.Elapse(atp2.Elapse(vState));
 					break;
 			}
@@ -165,16 +167,18 @@ namespace HKHR_ATP2
 			else if (vState.Vehicle.Speed.KilometersPerHour == 0
 			   && handlePower == 0
 			   && handleBrake == vSpec.BrakeNotches + 1) { // validation
-				if (key == VirtualKeys.A1 && currentMode != Modes.PM) {
+				if (key == VirtualKeys.A1 && currentMode < Modes.AM) {
 					currentMode++;
 					// sound
-				} else if (key == VirtualKeys.A2 && currentMode != Modes.Off) {
+				} else if (key == VirtualKeys.A2 && currentMode > Modes.Off) {
 					currentMode--;
 					// sound
 				}
 			}
 			
-			ato.KeyDown(key);
+			if (currentMode == Modes.AM) {
+				ato.KeyDown(key);
+			}
 		}
 		
 		public void SetSignal(SignalData[] signal) {

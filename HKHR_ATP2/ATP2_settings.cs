@@ -6,6 +6,6 @@ namespace HKHR_ATP2
 {
 	internal partial class ATP2
 	{
-		private const int DefaultNormalBrakeNotch = 3;
+		internal const int DefaultNormalBrakeNotch = 3;
 	}
 }
