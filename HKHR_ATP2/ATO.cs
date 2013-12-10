@@ -34,6 +34,9 @@ namespace HKHR_ATP2
 		
 		#region train brake rates, delays consts, length per car
 		double MaxSvcBrkRate = 0.0;
+		/// <summary>
+		/// Brake rates of each brake notches calculated by fetching data in Train.dat. The unit of values in this array is km/h/s. 
+		/// </summary>
 		double[] BrakeRate;
 		double BrakeUpDelay = 0.0;
 		#endregion
@@ -47,15 +50,35 @@ namespace HKHR_ATP2
 		private bool doorCls = true;
 		#endregion
 		
+		#region brake to hold speed
+		Time lastCheckSpeedCoasting = new Time(0);
+		
+		int BrakeToHoldSpeedNotch = 0;
+		#endregion
+		
 		#region last frame mem
-		private double lastFrame_PermittedSpeed = 0.0;
-		private double lastFrame_EmergencyBrakeSpeed = 0.0;
-		private double lastFrame_TargetSpeed = 0.0;
+		private ATOStates lastFrame_ATOState = ATOStates.BRAKE_STOP;
 		
 		private double lastFrame_Speed = 0.0;
 		
-		private int lasfFrame_PowerNotch = 0;
-		private int lasfFrame_BrakeNotch = 0;
+		private int lastFrame_PowerNotch = 0;
+		private int lastFrame_BrakeNotch = 0;
+		#endregion
+		
+		#region last 500ms mem
+		private double last1s_Speed = 0.0;
+		private int last1s_PowerNotch = -1;
+		private int last1s_BrakeNotch = -1;
+		#endregion
+		
+		#region prev tspeed, pspeed, ebspeed
+		double prevTargetSpeed = 0.0;
+		double prevPermittedSpeed = 0.0;
+		double prevEmergencyBrakeSpeed = 0.0;
+		#endregion
+		
+		#region slight slope
+		bool slightSlopeBrakeEnabled = false;
 		#endregion
 		
 		public void Load(LoadProperties properties)
@@ -140,9 +163,17 @@ namespace HKHR_ATP2
 				}
 				
 				#region Analysis and Switch States
-				// brake dure to arriving at next stop
+				// brake due to next speed flag
+				if (data.CurrentTargetSpeed < prevTargetSpeed) {
+					ATOCurrentState = ATOStates.BRAKE_SPEED;
+				}
+				// accelerate
+				else if (data.CurrentPermittedSpeed > prevPermittedSpeed) {
+					ATOCurrentState = ATOStates.POWER;
+				}
+				// brake due to arriving at next stop
 				// if next stop is available
-				if (lastCompletedDockingIndex + 1 < Stations.Count) {
+				else if (lastCompletedDockingIndex + 1 < Stations.Count) {
 					// if next stop should stop
 					if (Stations[lastCompletedDockingIndex + 1].DoorOpen > -2) {
 						// arriving at platform
@@ -153,25 +184,23 @@ namespace HKHR_ATP2
 						}
 					}
 				}
-				// brake due to next speed flag
-				else if (data.CurrentTargetSpeed < lastFrame_TargetSpeed) {
-					ATOCurrentState = ATOStates.BRAKE_SPEED;
-				}
-				// accelerate
-				else if (data.CurrentPermittedSpeed > lastFrame_PermittedSpeed) {
-					ATOCurrentState = ATOStates.POWER;
-				}
 				
 				// remember things for analysis on next frame
-				lastFrame_PermittedSpeed = data.CurrentPermittedSpeed;
-				lastFrame_EmergencyBrakeSpeed = data.CurrentEmergencyBrakeSpeed;
-				lastFrame_TargetSpeed = data.CurrentTargetSpeed;
+				if (data.CurrentTargetSpeed != prevTargetSpeed)
+					prevTargetSpeed = data.CurrentTargetSpeed;
+				
+				if (data.CurrentPermittedSpeed != prevPermittedSpeed)
+					prevPermittedSpeed = data.CurrentPermittedSpeed;
+				
+				if (data.CurrentEmergencyBrakeSpeed != prevEmergencyBrakeSpeed)
+					prevEmergencyBrakeSpeed = data.CurrentEmergencyBrakeSpeed;
 				#endregion
 				
 				#region Behaviour
 				if (data.ATPFail) {
 					ATOFail = true;
 				} else if (!data.ATPBrakeApplying) {
+					data.ElapseData.DebugMessage += ATOCurrentState.ToString() + ", ";
 					switch (ATOCurrentState) {
 						case ATOStates.POWER:
 							if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + StopAcceleratingSpeed)
@@ -189,11 +218,66 @@ namespace HKHR_ATP2
 								goto case ATOStates.KEEPSPEED;
 							}
 							
-							// TODO: brake to hold speed?
-							if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + CoastingTooFastForcePowerSpeed) {
-								vState.Handles.PowerNotch = 0;
-								vState.Handles.BrakeNotch = CoastingTooFastForceBrakeNotch;
+							#region brake to hold speed?
+							// if new to coasting state, reset brake notch
+							if(lastFrame_ATOState != ATOCurrentState)
+								vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch = 0;
+							
+							// if notches are interrupted, then recount the timer
+							if (lastFrame_ATOState != ATOCurrentState || 
+								last1s_PowerNotch != lastFrame_PowerNotch || last1s_BrakeNotch != lastFrame_BrakeNotch) {
+//								System.Windows.Forms.MessageBox.Show(lastCheckSpeedCoasting + "");
+								lastCheckSpeedCoasting = vState.TotalTime;
+								last1s_Speed = vState.Vehicle.Speed.KilometersPerHour;
+								last1s_PowerNotch = lastFrame_BrakeNotch;
+								last1s_BrakeNotch = lastFrame_BrakeNotch;
 							}
+							
+							if (vState.TotalTime.Milliseconds >= lastCheckSpeedCoasting.Milliseconds + 1000) {
+								if (vState.Vehicle.Speed.KilometersPerHour - last1s_Speed > 0) {
+									for (int i = BrakeRate.Length - 1; i >= 0; i--) {
+//										System.Windows.Forms.MessageBox.Show((Math.Abs(last500ms_Speed - vState.Vehicle.Speed.KilometersPerHour) / 0.5 >= Math.Abs(BrakeRate[i])) + "");
+										if (vState.Vehicle.Speed.KilometersPerHour - last1s_Speed >= BrakeRate[i]) {
+											vState.Handles.PowerNotch = 0;
+											vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch = i;
+											break;
+										}
+									}
+								}
+								lastCheckSpeedCoasting = vState.TotalTime;
+								last1s_Speed = vState.Vehicle.Speed.KilometersPerHour;
+								last1s_PowerNotch = vState.Handles.PowerNotch;
+								last1s_BrakeNotch = vState.Handles.BrakeNotch;
+							}
+							#endregion
+							#region slight slope that above command cannot detect
+							else if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentPermittedSpeed && slightSlopeBrakeEnabled) {
+								slightSlopeBrakeEnabled = false;
+								vState.Handles.PowerNotch = 0;
+								vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch = 0;
+							}
+							else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + 4) {
+								slightSlopeBrakeEnabled = true;
+								vState.Handles.PowerNotch = 0;
+								vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch = 3;
+							}
+							else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + 3) {
+								slightSlopeBrakeEnabled = true;
+								vState.Handles.PowerNotch = 0;
+								vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch = 2;
+							}
+							else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + 2) {
+								slightSlopeBrakeEnabled = true;
+								vState.Handles.PowerNotch = 0;
+								vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch = 1;
+							}
+							#endregion
+							
+							if (BrakeToHoldSpeedNotch > 0)
+								vState.DebugMessage += "BrakeToHoldSpeed(" + BrakeToHoldSpeedNotch + "),";
+							if (slightSlopeBrakeEnabled)
+								vState.DebugMessage += "slightSlopeBrakeEnabled,";
+							
 							// TODO: power if too low speed?
 							else if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentPermittedSpeed + CoastingTooSlowForcePowerSpeed) {
 								ATOCurrentState = ATOStates.POWER;
@@ -201,14 +285,14 @@ namespace HKHR_ATP2
 							}
 							else {
 								vState.Handles.PowerNotch = 0;
-								vState.Handles.BrakeNotch = 0;
+								vState.Handles.BrakeNotch = BrakeToHoldSpeedNotch;
 							}
 							break;
 						case ATOStates.KEEPSPEED:
 							throw new NotImplementedException();
 //							break;
 						case ATOStates.BRAKE_SPEED:
-							if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentPermittedSpeed + StopBrakingSpeed)
+							if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentTargetSpeed + StopBrakingSpeed)
 							{
 								ATOCurrentState = ATOStates.COASTING;
 								goto case ATOStates.COASTING;
@@ -228,7 +312,15 @@ namespace HKHR_ATP2
 							break;
 						case ATOStates.BRAKE_STOP:
 							vState.Handles.PowerNotch = 0;
+							
+							if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 3)
+							{
+								vState.Handles.BrakeNotch = 0;
+								break;
+							}
+								
 							for (int i = 0; i < BrakeRate.Length; i++) {
+								// TODO: 
 								// brake rates are negative numbers
 								if (Math.Abs(BrakeRate[i]) >= Math.Abs(AccelerationPhysics.GetAccelerationRate(0,
 								                                            vState.Vehicle.Speed.KilometersPerHour, 
@@ -247,9 +339,10 @@ namespace HKHR_ATP2
 			   	vState.Handles.BrakeNotch = vSpec.BrakeNotches;
 			}
 			
+			lastFrame_ATOState = ATOCurrentState;
 			lastFrame_Speed = vState.Vehicle.Speed.KilometersPerHour;
-			lasfFrame_PowerNotch = vState.Handles.PowerNotch;
-			lasfFrame_BrakeNotch = vState.Handles.BrakeNotch;
+			lastFrame_PowerNotch = vState.Handles.PowerNotch;
+			lastFrame_BrakeNotch = vState.Handles.BrakeNotch;
 		}
 		
 		internal void SetPower(int powerNotch) {

@@ -16,3 +16,6 @@ F:\bve4\Train\HR300R\trainsys\HKHR_ATP2.pdb
 C:\Users\Charlie Poon\Desktop\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.csprojResolveAssemblyReference.cache
 C:\Users\Charlie Poon\Desktop\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.dll
 C:\Users\Charlie Poon\Desktop\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.pdb
+E:\progs\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.csprojResolveAssemblyReference.cache
+E:\progs\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.dll
+E:\progs\HKHR-ATP2\HKHR_ATP2\obj\x86\Debug\HKHR_ATP2.pdb
