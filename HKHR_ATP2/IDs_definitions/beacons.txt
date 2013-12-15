@@ -5,4 +5,5 @@ ID		Real?	Name/Description				Syntax on Optional vState
 8000	f		En/Disable Cab Signal			1 = Enable | 0 = Disable
 8010	f		Speed Flag						XXXYYYYYY => X=speed Y=starting location
 												Speed will apply from starting location to next one
-8020	f		Station Stop Provider			(+/-)9ZXYYYYYY 	X=door Y=trackpos Z=TBSStart{1;0}
+8020	f		Station Stop Provider			(+/-)ZXYYYYYY 	X=door Y=trackpos Z=TBSStart{1;0}
+8021	f		Track Gradient Point			(+/-)XXXYYYYYY 	X=pitch Y=trackpos

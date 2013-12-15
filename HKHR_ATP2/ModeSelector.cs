@@ -23,6 +23,7 @@ namespace HKHR_ATP2
 		
 		// Mode Classes
 		StationsMemory stationsMemory;
+		TrackGradientMemory trackGradientMemory;
 		Driverless driverless;
 		RM rm;
 		ATP2 atp2;
@@ -33,6 +34,9 @@ namespace HKHR_ATP2
 			
 			stationsMemory = new StationsMemory();
 			stationsMemory.Load(properties);
+			
+			trackGradientMemory = new TrackGradientMemory();
+			trackGradientMemory.Load(properties);
 			
 			driverless = new Driverless();
 			driverless.Load(properties);
@@ -51,7 +55,9 @@ namespace HKHR_ATP2
 			ato.Load(properties);
 			stationsMemory.OnStationDataRefreshed += new StationsMemory.NewStationDataReceiver(ato.WriteRefreshedStationsCollection);
 			stationsMemory.OnLastDockIndexRefreshed += new StationsMemory.LastDockIndexReceiver(ato.WriteRefreshedLastDockedIndex);
+			trackGradientMemory.OnGradientPointsDataRefreshed += new TrackGradientMemory.NewGradientPointsDataReceiver(ato.WriteRefreshedGradientPointCollection);
 //			driverless.OnDriverlessAvailableElapse += new CallDriverlessAvailableEventHandlers();
+			
 		}
 		
 		internal void SetVehicleSpecs(VehicleSpecs specs) {
@@ -187,6 +193,7 @@ namespace HKHR_ATP2
 		public void SetBeacon(BeaconData beacon) {
 			atp2.SetBeacon(beacon);
 			stationsMemory.SetBeacon(beacon);
+			trackGradientMemory.SetBeacon(beacon);
 		}
 	}
 }

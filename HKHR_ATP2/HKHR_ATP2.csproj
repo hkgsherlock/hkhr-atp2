@@ -42,6 +42,7 @@
   <ItemGroup>
     <Reference Include="OpenBveApi">
       <HintPath>F:\openBVE\openBVE\OpenBveApi.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
@@ -80,6 +81,9 @@
       <DependentUpon>StationsMemory.cs</DependentUpon>
     </Compile>
     <Compile Include="StationsMemory.cs" />
+    <Compile Include="TrackGradientMemory.cs">
+      <DependentUpon>ATO.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="IDs_definitions\beacons.txt" />

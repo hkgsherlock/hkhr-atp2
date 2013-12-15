@@ -17,12 +17,21 @@
 			/// </summary>
 			public const int SpeedFlag = 8010;
 		}
+		
 		public static class StationsMemory
 		{
 			/// <summary>
 			/// (+/-)XZYYYYYY | X=doorside | Y=trackpos | Z=TBSStart{1;0}
 			/// </summary>
 			public const int StationStopProvider = 8020;
+		}
+		
+		public static class TrackGradientMemory
+		{
+			/// <summary>
+			/// (+/-)XXXYYYYYY 	X=pitch Y=trackpos
+			/// </summary>
+			public const int TrackGradientPoint = 8021;
 		}
 	}
 }

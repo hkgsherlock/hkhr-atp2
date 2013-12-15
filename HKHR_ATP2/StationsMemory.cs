@@ -73,7 +73,7 @@ namespace HKHR_ATP2
 				this._stns.AddRange(items);
 			}
 			
-			internal int IndexOf(int stopPosition)
+			internal int IndexOf(double stopPosition)
 			{
 				for (int i = 0; i < _stns.Count; i++) {
 					if (stopPosition == _stns[i].StopPosition) {
@@ -229,7 +229,7 @@ namespace HKHR_ATP2
 				
 				int idxOfStopAtHere = Stations.IndexOf(param_trackPos);
 				
-				if (idxOfStopAtHere > 0) {
+				if (idxOfStopAtHere > -1) {
 					// stop exists
 					Stations[idxOfStopAtHere] = new Station(param_doorside, param_trackPos, param_tbsStart);
 				} else {
