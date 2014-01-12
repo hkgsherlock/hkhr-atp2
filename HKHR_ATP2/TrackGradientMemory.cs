@@ -19,7 +19,14 @@ namespace HKHR_ATP2
 		
 		internal class GradientPointCollection
 		{
-			private List<GradientPoint> _gPts = new List<GradientPoint>();
+			private List<GradientPoint> _gPts;
+			
+			public GradientPointCollection()
+			{
+				this._gPts = new List<GradientPoint>();
+				this._gPts.Add(new GradientPoint(0, 0));
+			}
+			
 			internal GradientPoint this[int index]
 			{
 				get
@@ -93,7 +100,6 @@ namespace HKHR_ATP2
 		
 		internal void Load(LoadProperties properties) {
 			_gPtC = new GradientPointCollection();
-			_gPtC.Add(new GradientPoint(0, 0));
 		}
 		
 		internal void SetBeacon(BeaconData beacon) {
@@ -105,10 +111,8 @@ namespace HKHR_ATP2
 				int idxOfGradientPtAtHere = _gPtC.IndexOf(param_trackPos);
 				
 				if (idxOfGradientPtAtHere > -1) {
-					// stop exists
 					_gPtC[idxOfGradientPtAtHere] = new GradientPoint(param_gradient, param_trackPos);
 				} else {
-					// stop not exist, add one then
 					_gPtC.Add(new GradientPoint(param_gradient, param_trackPos));
 				}
 				

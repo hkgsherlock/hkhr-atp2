@@ -419,6 +419,10 @@ namespace HKHR_ATP2
 				Panel[PanelID.StatusLEDs.HKHR_ATP] = 0;
 				Panel[PanelID.StatusLEDs.NoSignal] = 1;
 			}
+			
+			// debug on oB's debug string
+			vState.DebugMessage += "P:" + PermittedSpeed + ";T:" + TargetSpeed + ";E:" + EmergencyBrakeSpeed + ", ";
+			
 			// return atpElapseData
 			atpElapseData.ElapseData = vState;
 			

@@ -52,7 +52,10 @@
     <Compile Include="ATO.cs">
       <DependentUpon>ModeSelector.cs</DependentUpon>
     </Compile>
-    <Compile Include="ATO_settings.cs">
+    <Compile Include="ATO_GeneralSettings.cs">
+      <DependentUpon>ATO.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ATO_profiles.cs">
       <DependentUpon>ATO.cs</DependentUpon>
     </Compile>
     <Compile Include="ATP2.cs">

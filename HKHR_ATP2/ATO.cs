@@ -13,8 +13,9 @@ namespace HKHR_ATP2
 		#region ATO statuses
 		private bool ATOFail = false;
 		private bool ATOStarted = false;
-		enum ATOStates { POWER, COASTING, KEEPSPEED, BRAKE_SPEED, BRAKE_STOP }
+		enum ATOStates { START, POWER, COASTING, KEEPSPEED, BRAKE_SPEED, BRAKE_STOP }
 		ATOStates ATOCurrentState = ATOStates.BRAKE_STOP;
+		double ATOStartLocation = 0.0;
 		#endregion
 		
 		#region Acceleration Rate calculated by ATO itself
@@ -70,9 +71,10 @@ namespace HKHR_ATP2
 		private bool doorCls = true;
 		#endregion
 		
-		#region brake to hold speed
-		Time lastCheckSpeedCoasting = new Time(0);
+		#region power/brake to hold speed
+		int PowerToHoldSpeedNotch = 0;
 		
+		Time lastCheckSpeedCoasting = new Time(0);
 		int BrakeToHoldSpeedNotch = 0;
 		#endregion
 		
@@ -151,13 +153,14 @@ namespace HKHR_ATP2
 			
 			Handles atpHandlesResult = data.ElapseData.Handles;
 			
+			// UNDONE:
 			if (vState.TotalTime.Milliseconds >= lastTimeRefreshATOAccelerationRate.Milliseconds + 100) {
 				ATO_AccelerationRate = (vState.Vehicle.Speed.KilometersPerHour - lastTimeRefreshATOAccelerationRate_SpeedKMHS) / (vState.TotalTime.Milliseconds - lastTimeRefreshATOAccelerationRate.Milliseconds) * 1000;
 				
 				lastTimeRefreshATOAccelerationRate_SpeedKMHS = vState.Vehicle.Speed.KilometersPerHour;
 				lastTimeRefreshATOAccelerationRate = vState.TotalTime;
 			}
-			vState.DebugMessage = "Accel:" + ATO_AccelerationRate + "km/h/s; " + vState.DebugMessage;
+//			vState.DebugMessage = "Accel:" + ATO_AccelerationRate + "km/h/s; " + vState.DebugMessage;
 			
 			// fail the ATO if handles fail whilst ATO running
 			if (ATOStarted && 
@@ -191,7 +194,8 @@ namespace HKHR_ATP2
 			// how is ATO working?
 			else if (ATOStarted) {
 				// jump to stop working if not powering and stopped
-				if (vState.Vehicle.Speed.KilometersPerHour == 0 && ATOCurrentState > ATOStates.POWER) {
+				// OK: ATOStates.START + ATOStates.POWER
+				if (vState.Vehicle.Speed.KilometersPerHour == 0.0 && ATOCurrentState > ATOStates.POWER) {
 					ATOStarted = false;
 				}
 				
@@ -210,10 +214,20 @@ namespace HKHR_ATP2
 					// if next stop should stop
 					if (Stations[lastCompletedDockingIndex + 1].DoorOpen > -2) {
 						// arriving at platform
-						if (Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location <=
-						    AccelerationPhysics.GetDisplacement(data.CurrentPermittedSpeed, 0, BrakeRate[ATP2.DefaultNormalBrakeNotch])
-						   ) {
-							ATOCurrentState = ATOStates.BRAKE_STOP;
+						// UNDONE: 
+						double BrakingDistanceByPermittedSpeed = AccelerationPhysics.GetDisplacement(data.CurrentPermittedSpeed, 0, BrakeRate[ATP2.DefaultNormalBrakeNotch]);
+						if (Stations[lastCompletedDockingIndex + 1].StopPosition - GeneralSettings.BrakeCurveHigh_ReservingDistance - vState.Vehicle.Location <= BrakingDistanceByPermittedSpeed) {
+							if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 2) {
+//								vState.DebugMessage += "S1:" + ATOStartLocation + " >= " + (Stations[lastCompletedDockingIndex + 1].StopPosition - BrakingDistanceByPermittedSpeed) + ", ";
+								if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 5 && ATOStartLocation >= Stations[lastCompletedDockingIndex + 1].StopPosition - BrakingDistanceByPermittedSpeed) {
+									vState.DebugMessage += "SPower, ";
+									ATOCurrentState = ATOStates.POWER;
+								} else {
+									ATOCurrentState = ATOStates.COASTING;
+								}
+							} else {
+								ATOCurrentState = ATOStates.BRAKE_STOP;
+							}
 						}
 					}
 				}
@@ -235,9 +249,16 @@ namespace HKHR_ATP2
 				} else if (!data.ATPBrakeApplying) {
 					data.ElapseData.DebugMessage += ATOCurrentState.ToString() + ", ";
 					switch (ATOCurrentState) {
+						case ATOStates.START:
+							if (vState.Vehicle.Speed.KilometersPerHour >= 1) {
+								ATOCurrentState = ATOStates.POWER;
+								goto case ATOStates.POWER;
+							}
+							ATOPower = vSpec.PowerNotches;
+							ATOBrake = 0;
+							break;
 						case ATOStates.POWER:
-							if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + StopAcceleratingSpeed)
-							{
+							if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + atoProfiles[profileID].StopAcceleratingSpeed) {
 								ATOCurrentState = ATOStates.COASTING;
 								goto case ATOStates.COASTING;
 							}
@@ -246,11 +267,9 @@ namespace HKHR_ATP2
 							ATOBrake = 0;
 							break;
 						case ATOStates.COASTING:
-							if (HoldSpeedNotCoasting)
-							{
+							if (atoProfiles[profileID].HoldSpeedNotCoasting) {
 								goto case ATOStates.KEEPSPEED;
 							}
-							
 							#region brake to hold speed?
 							// if new to coasting state, reset brake notch
 							if(lastFrame_ATOState != ATOCurrentState)
@@ -316,7 +335,7 @@ namespace HKHR_ATP2
 								vState.DebugMessage += "slightSlopeBrakeEnabled,";
 							
 							// TODO: power if too low speed?
-							else if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentPermittedSpeed + CoastingTooSlowForcePowerSpeed) {
+							else if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentPermittedSpeed + atoProfiles[profileID].CoastingTooSlowForcePowerSpeed) {
 								ATOCurrentState = ATOStates.POWER;
 								goto case ATOStates.POWER;
 							}
@@ -327,9 +346,60 @@ namespace HKHR_ATP2
 							break;
 						case ATOStates.KEEPSPEED:
 							throw new NotImplementedException();
-//							break;
+							if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + atoProfiles[profileID].StopAcceleratingSpeed) {
+								PowerToHoldSpeedNotch = 0;
+							}
+							#region slight slope that above command cannot detect
+							else if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentPermittedSpeed && slightSlopeBrakeEnabled) {
+								slightSlopeBrakeEnabled = false;
+								ATOPower = 0;
+								ATOBrake = BrakeToHoldSpeedNotch = 0;
+							}
+							else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + 4) {
+								vState.DebugMessage += "(S)";
+								slightSlopeBrakeEnabled = true;
+								ATOPower = 0;
+								ATOBrake = BrakeToHoldSpeedNotch = 3;
+							}
+							else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + 3) {
+								vState.DebugMessage += "(S)";
+								slightSlopeBrakeEnabled = true;
+								ATOPower = 0;
+								ATOBrake = BrakeToHoldSpeedNotch = 2;
+							}
+							else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed + 2) {
+								vState.DebugMessage += "(S)";
+								slightSlopeBrakeEnabled = true;
+								ATOPower = 0;
+								ATOBrake = BrakeToHoldSpeedNotch = 1;
+							}
+							#endregion
+							#region power to keep speed
+							else if (true) {
+								#region deceleration caused by gradient
+								// Rate = 1000 * Y / X
+								double pitchInPerMill_KEEPSPEED = gPtMem[gPtMem.CurrentIndex(vState.Vehicle.Location)].Pitch;
+								// Acceleration due to gravity is 9.79 ms^-2
+								double accelerationCausedByGradient_KEEPSPEED = 9.79 / (1 / (-1 * pitchInPerMill_KEEPSPEED / 1000));
+								vState.DebugMessage += "pitch: " + pitchInPerMill_KEEPSPEED + "; DCBG: " + accelerationCausedByGradient_KEEPSPEED + ", ";
+								#endregion
+								
+								#region calculation
+								#endregion
+							}
+							#endregion
+							
+							// debug
+							if (BrakeToHoldSpeedNotch > 0)
+								vState.DebugMessage += "(" + (vState.Vehicle.Speed.KilometersPerHour - last1s_Speed) + ")BrakeToHoldSpeed(" + BrakeToHoldSpeedNotch + "),";
+							if (slightSlopeBrakeEnabled)
+								vState.DebugMessage += "slightSlopeBrakeEnabled,";
+							
+							ATOPower = PowerToHoldSpeedNotch;
+							ATOBrake = 0;
+							break;
 						case ATOStates.BRAKE_SPEED:
-							if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentTargetSpeed + StopBrakingSpeed)
+							if (vState.Vehicle.Speed.KilometersPerHour <= data.CurrentTargetSpeed + atoProfiles[profileID].StopBrakingSpeed)
 							{
 								ATOCurrentState = ATOStates.COASTING;
 								goto case ATOStates.COASTING;
@@ -350,6 +420,11 @@ namespace HKHR_ATP2
 									break;
 								}
 							}
+							
+							if (vState.Vehicle.Speed.KilometersPerHour > data.CurrentTargetSpeed + 4) {
+								ATOBrake = vSpec.BrakeNotches;
+							}
+							
 							break;
 						case ATOStates.BRAKE_STOP:
 							ATOPower = 0;
@@ -357,34 +432,65 @@ namespace HKHR_ATP2
 							// TODO: more accurate calculation for gradient
 							#region deceleration caused by gradient
 							// Rate = 1000 * Y / X
-							double pitchInPerMill = gPtMem[gPtMem.CurrentIndex(vState.Vehicle.Location)].Pitch;
+							double pitchInPerMill_BRAKE_STOP = gPtMem[gPtMem.CurrentIndex(vState.Vehicle.Location)].Pitch;
 							// Acceleration due to gravity is 9.79 ms^-2
-							double decelerationCausedByGradient = 9.79 / (1 / (pitchInPerMill / 1000));
-							vState.DebugMessage += "pitch: " + pitchInPerMill + "; DCBG: " + decelerationCausedByGradient + ", ";
+							double accelerationCausedByGradient_BRAKE_STOP = 9.79 / (1 / (-1 * pitchInPerMill_BRAKE_STOP / 1000));
+							vState.DebugMessage += "pitch: " + pitchInPerMill_BRAKE_STOP + "; DCBG: " + accelerationCausedByGradient_BRAKE_STOP + ", ";
 							#endregion
 							
 							#region calculation
 							for (int i = 0; i < BrakeRate.Length; i++) {
-								// TODO: lighter brake when 5m
-								// brake rates are negative numbers
-								if (Math.Abs(BrakeRate[i]) + decelerationCausedByGradient  >= Math.Abs(AccelerationPhysics.GetAccelerationRate(0,
-								                                            vState.Vehicle.Speed.KilometersPerHour, 
-								                                            Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location)))
-								{
-									ATOBrake = i;
-									break;
+								if (Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location <= GeneralSettings.BrakeCurveHigh_ChangeToLowDistance) {
+									// brake rates are negative numbers
+									if (Math.Abs(BrakeRate[i]) - accelerationCausedByGradient_BRAKE_STOP >= Math.Abs(AccelerationPhysics.GetAccelerationRate(0,
+									                                            vState.Vehicle.Speed.KilometersPerHour, 
+									                                            Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location)))
+									{
+										ATOBrake = i;
+										break;
+									}
+								} else {
+									// brake rates are negative numbers
+									if (Math.Abs(BrakeRate[i]) - accelerationCausedByGradient_BRAKE_STOP >= Math.Abs(AccelerationPhysics.GetAccelerationRate(0,
+									                                            vState.Vehicle.Speed.KilometersPerHour, 
+									                                            Stations[lastCompletedDockingIndex + 1].StopPosition - vState.Vehicle.Location - GeneralSettings.BrakeCurveHigh_ReservingDistance)))
+									{
+										ATOBrake = i;
+										break;
+									}
 								}
 							}
 							#endregion
 							
 							#region don't decelerate if speed is too low
-							if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 4 && ATOBrake > 0) {
-								ATOBrake -= 2;
-							} else if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 2 && ATOBrake > 0) {
-								ATOBrake--;
-							} else {
-								
+							if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentTargetSpeed - 5) {
+								resistBrakingNotch = vSpec.BrakeNotches;
+							} else if (resistBrakingNotch == 2) {
+								if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed - 3
+								    && vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 1) {
+									resistBrakingNotch = 1;
+								} else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed - 1) {
+									resistBrakingNotch = 0;
+								}
+							} else if (resistBrakingNotch == 1) {
+								if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 4) {
+									resistBrakingNotch = 2;
+								} else if (vState.Vehicle.Speed.KilometersPerHour >= data.CurrentPermittedSpeed - 1) {
+									resistBrakingNotch = 0;
+								}
+							} else if (resistBrakingNotch == 0) {
+								if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 4) {
+									resistBrakingNotch = 2;
+								} else if (vState.Vehicle.Speed.KilometersPerHour < data.CurrentPermittedSpeed - 2) {
+									resistBrakingNotch = 1;
+								}
 							}
+							
+							ATOBrake -= (ATOBrake - resistBrakingNotch < 0 ? 0 : resistBrakingNotch);
+							
+							// debug
+							if (resistBrakingNotch > 0)
+								vState.DebugMessage += "ForceB-" + resistBrakingNotch + ", ";
 							#endregion
 							
 							break;
@@ -414,11 +520,7 @@ namespace HKHR_ATP2
 		}
 		
 		internal void DoorChange(DoorStates oldState, DoorStates newState) {
-			if (newState == DoorStates.None) {
-				doorCls = true;
-			} else {
-				doorCls = false;
-			}
+			doorCls = newState == DoorStates.None; // E~A~S~Y~
 		}
 		
 		internal void KeyDown(VirtualKeys key) {
@@ -429,12 +531,13 @@ namespace HKHR_ATP2
 					   	vState.Handles.PowerNotch == 0 && 
 					   	vState.Handles.BrakeNotch == vSpec.BrakeNotches)
 					{
-						ATOCurrentState = ATOStates.POWER;
+						ATOCurrentState = ATOStates.START;
+						ATOStartLocation = vState.Vehicle.Location;
 						ATOStarted = true;
 					}
 					break;
 				case VirtualKeys.L:
-						ATOFail = true;
+					ATOFail = true;
 					break;
 			}
 		}
