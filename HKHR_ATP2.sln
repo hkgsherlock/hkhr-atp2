@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # SharpDevelop 4.3
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HKHR_ATP2", "HKHR_ATP2\HKHR_ATP2.csproj", "{D49DB8CF-5EB9-4AEA-A749-F379E8D34768}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TIMS_ExtClient", "TIMS_ExtClient\TIMS_ExtClient.csproj", "{52FBA90D-65F0-4D44-BFAD-C12C24A1ACE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dummyPipeClient", "dummyPipeClient\dummyPipeClient.csproj", "{3CE8FB16-D2ED-4C09-B144-0E7A0F5714D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -14,5 +18,13 @@ Global
 		{D49DB8CF-5EB9-4AEA-A749-F379E8D34768}.Debug|x86.ActiveCfg = Debug|x86
 		{D49DB8CF-5EB9-4AEA-A749-F379E8D34768}.Release|x86.Build.0 = Release|x86
 		{D49DB8CF-5EB9-4AEA-A749-F379E8D34768}.Release|x86.ActiveCfg = Release|x86
+		{52FBA90D-65F0-4D44-BFAD-C12C24A1ACE8}.Debug|x86.Build.0 = Debug|Any CPU
+		{52FBA90D-65F0-4D44-BFAD-C12C24A1ACE8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{52FBA90D-65F0-4D44-BFAD-C12C24A1ACE8}.Release|x86.Build.0 = Release|Any CPU
+		{52FBA90D-65F0-4D44-BFAD-C12C24A1ACE8}.Release|x86.ActiveCfg = Release|Any CPU
+		{3CE8FB16-D2ED-4C09-B144-0E7A0F5714D5}.Debug|x86.Build.0 = Debug|Any CPU
+		{3CE8FB16-D2ED-4C09-B144-0E7A0F5714D5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3CE8FB16-D2ED-4C09-B144-0E7A0F5714D5}.Release|x86.Build.0 = Release|Any CPU
+		{3CE8FB16-D2ED-4C09-B144-0E7A0F5714D5}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 EndGlobal

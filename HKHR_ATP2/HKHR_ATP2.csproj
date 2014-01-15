@@ -14,8 +14,13 @@
     <NoStdLib>False</NoStdLib>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
     <OutputPath>F:\bve4\Train\HR300R\trainsys\</OutputPath>
+    <NoWin32Manifest>False</NoWin32Manifest>
+    <StartAction>Program</StartAction>
+    <StartProgram>F:\openBVE\openBVE\openBVE.exe</StartProgram>
+    <RunCodeAnalysis>False</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -40,6 +45,9 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>C:\Users\Charlie Poon\Desktop\JsonNet\Bin\Net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="OpenBveApi">
       <HintPath>F:\openBVE\openBVE\OpenBveApi.dll</HintPath>
       <Private>False</Private>
@@ -49,6 +57,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccelerationPhysics.cs" />
+    <Compile Include="AsyncPipeServer.cs">
+      <DependentUpon>TIMS.cs</DependentUpon>
+    </Compile>
     <Compile Include="ATO.cs">
       <DependentUpon>ModeSelector.cs</DependentUpon>
     </Compile>
@@ -84,6 +95,7 @@
       <DependentUpon>StationsMemory.cs</DependentUpon>
     </Compile>
     <Compile Include="StationsMemory.cs" />
+    <Compile Include="TIMS.cs" />
     <Compile Include="TrackGradientMemory.cs">
       <DependentUpon>ATO.cs</DependentUpon>
     </Compile>
