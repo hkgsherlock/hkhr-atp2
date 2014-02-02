@@ -110,7 +110,7 @@ namespace HKHR_ATP2
 			{
 				if (x.StartingLocation < y.StartingLocation) {
 					return -1;
-				} else if (x.StartingLocation == y.StartingLocation) {
+				} else if (x.StartingLocation > y.StartingLocation) {
 					return 1;
 				} else {
 					if (x.Speed < y.Speed) {
